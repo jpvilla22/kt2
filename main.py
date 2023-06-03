@@ -1,38 +1,59 @@
-import kivy
+'''
+Camera Example
+==============
+
+This example demonstrates a simple use of the camera. It shows a window with
+a buttoned labelled 'play' to turn the camera on and off. Note that
+not finding a camera, perhaps because gstreamer is not installed, will
+throw an exception during the kv language processing.
+
+'''
+
+# Uncomment these lines to see all the messages
+# from kivy.logger import Logger
+# import logging
+# Logger.setLevel(logging.TRACE)
+
 from kivy.app import App
-from kivy.uix.label import Label
-from kivy.uix.button import Button
-from kivy.uix.gridlayout import GridLayout
+from kivy.lang import Builder
+from kivy.uix.boxlayout import BoxLayout
+import time
+Builder.load_string('''
+<CameraClick>:
+    orientation: 'vertical'
+    Camera:
+        id: camera
+        resolution: (640, 480)
+        play: False
+    ToggleButton:
+        text: 'Play'
+        on_press: camera.play = not camera.play
+        size_hint_y: None
+        height: '48dp'
+    Button:
+        text: 'Capture'
+        size_hint_y: None
+        height: '48dp'
+        on_press: root.capture()
+''')
 
 
-class IntermittentFastingApp(App):
+class CameraClick(BoxLayout):
+    def capture(self):
+        '''
+        Function to capture the images and give them the names
+        according to their captured time and date.
+        '''
+        camera = self.ids['camera']
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        camera.export_to_png("IMG_{}.png".format(timestr))
+        print("Captured")
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.start_time = None
-        self.end_time = None
+
+class TestCamera(App):
 
     def build(self):
-        layout = GridLayout(cols=2)
-        label = Label(text="Start Time")
-        button = Button(text="Start")
-        layout.add_widget(label)
-        layout.add_widget(button)
-
-        def start_fasting():
-            self.start_time = kivy.Clock.get_time()
-            button.text = "Stop"
-
-        button.bind(on_press=start_fasting)
-
-        return layout
-
-    def on_stop(self):
-        if self.start_time is not None:
-            end_time = kivy.Clock.get_time()
-            hours = (end_time - self.start_time) / 3600
-            print(f"You fasted for {hours} hours.")
+        return CameraClick()
 
 
-if __name__ == "__main__":
-    IntermittentFastingApp().run()
+TestCamera().run()
